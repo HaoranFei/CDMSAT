@@ -22,7 +22,7 @@ struct metadata{
 	size_t num_clauses;
 	//Should be "cnf"
 	char* type_prob;
-}
+};
 
 typedef struct metadata* metadata;
 //According to DiMAC SAT specification, each variable is a int
@@ -34,7 +34,7 @@ typedef int var;
 struct single_clause{
 	size_t clause_length;
 	var* vars;
-}
+};
 
 typedef struct single_clause* clause;
 
@@ -44,7 +44,7 @@ struct SAT_instance{
 	size_t* literal_indices;
 	size_t* neg_indices;
 	clause* clauses;
-}
+};
 
 typedef struct SAT_instance* SAT;
 
