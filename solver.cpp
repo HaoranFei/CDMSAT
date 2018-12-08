@@ -3,10 +3,14 @@
 #include "solver.h"
 
 int main(){
-	list l1;
-	l1.append(0);
-	l1.append(1);
-	l1.append(2);
-	cout << l1.index(0);
+
+	SAT S = SAT();
+	metadata M = metadata();
+	M.num_vars = 100;
+	M.num_clauses = 1;
+	M.type_prob = "CNF";
+	S.meta = M;
+	cout << S.meta.num_vars; 
+	cout << S.meta.num_clauses;
 	return 0;
 }

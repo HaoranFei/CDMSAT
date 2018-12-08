@@ -11,9 +11,10 @@
 #include <string>
 #include <fstream>
 #include <iomanip>
-#include <boost/python.hpp>
+#include <vector>
 
-using namespace boost::python;
+
+using namespace std;
 
 
 
@@ -21,36 +22,38 @@ struct metadata{
 	size_t num_vars;
 	size_t num_clauses;
 	//Should be "cnf"
-	char* type_prob;
+	string type_prob;
 };
 
-typedef struct metadata* metadata;
 //According to DiMAC SAT specification, each variable is a int
 //<0: negation
 //>0: variable (1 ~ n)
 //0: termination cahracter for each clause
 typedef int var;
+typedef unsigned long uint;
 
-struct single_clause{
-	size_t clause_length;
-	var* vars;
+struct clause{
+	uint clause_length;
+	vector<var> vars;
 };
 
-typedef struct single_clause* clause;
+//typedef struct single_clause* clause;
 
 
-struct SAT_instance{
+struct SAT{
 	metadata meta;
-	size_t* literal_indices;
-	size_t* neg_indices;
-	clause* clauses;
+	vector<uint> literal_indices;
+	vector<uint> neg_indices;
+	vector<clause> clauses;
 };
 
-typedef struct SAT_instance* SAT;
+//typedef struct SAT_instance* SAT;
 
 bool is_neg(var v);
 bool is_unit_clause(clause C);
 bool is_pure(SAT S, var v);
+
+
 
 
 
