@@ -166,7 +166,7 @@ int main(int argc, char *argv[]){
 	//original.clauses[1] = assign_clause(original.clauses[1], 4, false);
 	//cout << "Length of first clause is: " << original.clauses[1].clause_length << "\n";
 
-	SAT S2 = assign(original, 1, true);
+	SAT S2 = assign(original, 1, false);
 
 	//bool res = DPLL_solve(original);
 
@@ -414,13 +414,36 @@ SAT assign(SAT S, var v, bool value){
 			output.meta.is_constant_false = true;
 			break;
 		}
-
+		//Normal clause
 		else{
+			//Erase variable to assign from index lists
+			//SHOULD NOT USE NEWCLUASE
+			//BUG MUST BE FIXED TOMORROW
+			for(int j = 0; j < newclause.vars.size(); j++){
+				var curr_var = newclause.vars[j];
+				vector<ulong>::iterator it;
+				var curr_var_abs = abs(curr_var);
+
+				//Eliminate current variable from positive index list
+				if(curr_var_abs == v && curr_var > 0){
+					it = find(output.literal_indices[curr_var -1].begin(), 
+						output.literal_indices[curr_var -1].end(), i);
+					output.literal_indices[curr_var -1].erase(it);
+				}
+				//Eliminate current variable from negative index list;
+				else if (curr_var_abs == v && curr_var < 0){
+					it = find(output.neg_indices[abs(curr_var) -1].begin(), 
+						output.neg_indices[abs(curr_var) -1].end(), i);
+					output.neg_indices[abs(curr_var) -1].erase(it);
+				}
+			}
+
 			output.clauses[i] = newclause;
 			open_clause_counter += 1;
 			i+=1;
 		}
 	}
+	output.meta.num_open_clauses = open_clause_counter;
 
 	//If the assigned SAT instance has no more open clause
 	//And that it is not constant false, then it is true
