@@ -166,7 +166,7 @@ int main(int argc, char *argv[]){
 	//original.clauses[1] = assign_clause(original.clauses[1], 4, false);
 	//cout << "Length of first clause is: " << original.clauses[1].clause_length << "\n";
 
-	SAT S2 = assign(original, 1, false);
+	SAT S2 = assign(original, 4, true);
 
 	//bool res = DPLL_solve(original);
 
@@ -185,8 +185,10 @@ int main(int argc, char *argv[]){
 
 	
 	for(int i = 0; i < S2.meta.num_vars; i++){
+		cout << "Now printing lists for variable: " << i+1 << "\n";
 		print_vector(S2.literal_indices[i]);
 		print_vector(S2.neg_indices[i]);
+		cout << "\n";
 	}
 	
 }
@@ -323,6 +325,8 @@ var choose_literal(SAT S);
 clause assign_clause(clause l, var v, bool value){
 	clause output = copy_clause(l);
 	ulong i = 0;
+	//cout <<"output.clause_length is: " << output.clause_length << "\n";
+
 	if(output.clause_length == -1){
 		//Constant true clause
 		return output;
@@ -342,6 +346,7 @@ clause assign_clause(clause l, var v, bool value){
 			//Assign to true
 			//literal = true
 			else if(output.vars[i] > 0 && value){
+				//cout << "Found constant true clause! \n";
 				output.clause_length = -1;
 				return output;
 			}
@@ -380,16 +385,16 @@ SAT assign(SAT S, var v, bool value){
 		return output;
 	}
 
+	//cout << "output.meta.num_clauses = " << output.meta.num_clauses << "\n";
+
 	int open_clause_counter = 0;
 	for(int i = 0; i < output.meta.num_clauses; i++){
 		clause newclause = assign_clause(output.clauses[i], v, value);
 		//A clause evaluates to constant true
 		//Update the reference list of variables
 		if(newclause.clause_length == -1){
-			output.clauses[i] = newclause;
-
-			for(int j = 0; j < newclause.vars.size(); j++){
-				var curr_var = newclause.vars[j];
+			for(int j = 0; j < output.clauses[i].vars.size(); j++){
+				var curr_var = output.clauses[i].vars[j];
 				vector<ulong>::iterator it;
 
 				//Eliminate current clause from positive index list
@@ -405,7 +410,7 @@ SAT assign(SAT S, var v, bool value){
 					output.neg_indices[abs(curr_var) -1].erase(it);
 				}
 			}
-			i += 1;
+			output.clauses[i] = newclause;
 		}
 
 		//We have an empty clause
@@ -419,8 +424,8 @@ SAT assign(SAT S, var v, bool value){
 			//Erase variable to assign from index lists
 			//SHOULD NOT USE NEWCLUASE
 			//BUG MUST BE FIXED TOMORROW
-			for(int j = 0; j < newclause.vars.size(); j++){
-				var curr_var = newclause.vars[j];
+			for(int j = 0; j < output.clauses[i].vars.size(); j++){
+				var curr_var = output.clauses[i].vars[j];
 				vector<ulong>::iterator it;
 				var curr_var_abs = abs(curr_var);
 
@@ -440,7 +445,6 @@ SAT assign(SAT S, var v, bool value){
 
 			output.clauses[i] = newclause;
 			open_clause_counter += 1;
-			i+=1;
 		}
 	}
 	output.meta.num_open_clauses = open_clause_counter;
