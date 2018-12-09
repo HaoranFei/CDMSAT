@@ -24,8 +24,11 @@ using namespace std;
 struct metadata{
 	size_t num_vars;
 	size_t num_clauses;
+	size_t num_open_clauses;
 	//Should be "cnf"
 	string type_prob;
+	bool is_constant_true;
+	bool is_constant_false;
 };
 
 //According to DiMAC SAT specification, each variable is a int
@@ -36,7 +39,7 @@ typedef int var;
 typedef unsigned long ulong;
 
 struct clause{
-	ulong clause_length;
+	int clause_length;
 	vector<var> vars;
 };
 
@@ -72,6 +75,10 @@ bool is_unit_clause(clause C);
 bool is_empty_clause(clause C);
 
 bool is_pure(SAT S, var v);
+
+clause copy_clause(const clause l);
+
+SAT copy_SAT(const SAT S);
 
 SAT unit_propagate(clause l, SAT S);
 

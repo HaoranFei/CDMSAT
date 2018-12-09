@@ -19,6 +19,8 @@ int main(int argc, char *argv[]){
 
 	metadata M = metadata();
 	SAT original = SAT();
+	M.is_constant_true = false;
+	M.is_constant_false = false;
 	bool found_problem_line = false;
 	string line;
 
@@ -65,6 +67,7 @@ int main(int argc, char *argv[]){
 
 			M.num_vars = num_vars;
 			M.num_clauses = num_clauses;
+			M.num_open_clauses = num_clauses;
 			M.type_prob = "cnf";
 			original.meta = M;
 			
@@ -156,8 +159,18 @@ int main(int argc, char *argv[]){
 		original.clauses.push_back(l);
 	}
 
-	bool res = DPLL_solve(original);
-	print_res(res);
+
+	//bool test1 = is_pure(original, 3);
+	//cout << "Variable 3 is pure, then print 1, else print 0: " << test1 << "\n"; 
+
+	//original.clauses[1] = assign_clause(original.clauses[1], 4, false);
+	//cout << "Length of first clause is: " << original.clauses[1].clause_length << "\n";
+
+	SAT S2 = assign(original, 1, true);
+
+	//bool res = DPLL_solve(original);
+
+	//print_res(res);
 
 	/*
 	for(int i = 0; i < original.meta.num_clauses; i++){
@@ -170,12 +183,12 @@ int main(int argc, char *argv[]){
 	return 0;
 	*/
 
-	/*
-	for(int i = 0; i < original.meta.num_vars; i++){
-		print_vector(original.literal_indices[i]);
-		print_vector(original.neg_indices[i]);
+	
+	for(int i = 0; i < S2.meta.num_vars; i++){
+		print_vector(S2.literal_indices[i]);
+		print_vector(S2.neg_indices[i]);
 	}
-	*/
+	
 }
 
 /*
@@ -224,7 +237,68 @@ bool is_empty_clause(clause C){
  * in the SAT formula S. 
  *
  */
-bool is_pure(SAT S, var v);
+bool is_pure(SAT S, var v){
+	bool positive_occurs = !S.literal_indices[v-1].empty();
+	bool negative_occurs = !S.neg_indices[v-1].empty();
+	
+	//Explanation: If both are empty, then the variable in not in the formula
+	//If one of them is empty, then the variable is pure
+	//If neither is empty, then it is not pure
+	return positive_occurs != negative_occurs;
+}
+
+/*
+ * Creating a new clause that is clone of old clause
+ * Deep copy
+ */
+clause copy_clause(const clause l){
+	clause output = clause();
+	output.clause_length = l.clause_length;
+	vector<var> ovars;
+	output.vars = ovars;
+	for(int i = 0; i < l.vars.size(); i++){
+		output.vars.push_back(l.vars[i]);
+	}
+	return output;
+}
+
+/*
+ * Creating a new SAT instance that is clone of old instance
+ * Deep copy
+ */
+SAT copy_SAT(const SAT S){
+	SAT output = SAT();
+	output.meta = S.meta;
+	vector<vector<ulong>> new_pos_list;
+	vector<vector<ulong>> new_neg_list;
+	output.literal_indices = new_pos_list;
+	output.neg_indices = new_neg_list;
+
+	for(int i = 0; i < S.literal_indices.size(); i++){
+		vector<ulong> list;
+		for(int j = 0; j < S.literal_indices[i].size(); j++){
+			list.push_back(S.literal_indices[i][j]);
+		}
+		output.literal_indices.push_back(list);
+	}
+
+	for(int i = 0; i < S.neg_indices.size(); i++){
+		vector<ulong> list2;
+		for(int j = 0; j < S.neg_indices[i].size(); j++){
+			list2.push_back(S.neg_indices[i][j]);
+		}
+		output.neg_indices.push_back(list2);
+	}
+
+	vector<clause> C;
+	output.clauses = C;
+	for(int k = 0; k < S.clauses.size(); k++){
+		output.clauses.push_back(copy_clause(S.clauses[k]));
+	}
+	return output;
+}
+
+
 
 SAT unit_propagate(clause l, SAT S);
 
@@ -232,13 +306,143 @@ SAT pure_literal_assign(clause l, var v);
 
 var choose_literal(SAT S);
 
-clause assign_clause(clause l, var v, bool value);
+/* 
+ * Try to assign a variable with a truth value
+ * Normally return a clause, now assigned with said truth values
+ * If clause does not contain the specified variable, then a copy
+ * is returned.
+ * If the clause,after assignment, is the constant true clause,
+ * Then return a special new clause with clause_length -1
+ * 
+ * If the clause, after assignment, is the constant false clause, 
+ * Then return a special new clause with clause_length = 0
+ * Which is empty clause.
+ *
+*/
 
-SAT assign(SAT S, var v, bool value);
+clause assign_clause(clause l, var v, bool value){
+	clause output = copy_clause(l);
+	ulong i = 0;
+	if(output.clause_length == -1){
+		//Constant true clause
+		return output;
+	}
+
+	while(i < output.vars.size()){
+		if(abs(output.vars[i]) == v){
+
+			//negation, assign to true
+			//literal = false
+			//delete from formula
+			if(output.vars[i] < 0 && value){
+				output.vars.erase(output.vars.begin() + i);
+				output.clause_length -= 1;
+				//index remains unchanged
+			}
+			//Assign to true
+			//literal = true
+			else if(output.vars[i] > 0 && value){
+				output.clause_length = -1;
+				return output;
+			}
+			//negation, assign to false
+			//literal = true
+			else if(output.vars[i] < 0 && !value){
+				output.clause_length = -1;
+				return output;
+			}
+			//Assign to false
+			//literal = false
+			//delete from formula
+			else{
+				output.vars.erase(output.vars.begin() + i);
+				output.clause_length -= 1;
+				//index remains unchange
+			}
+		}
+		else{
+			i += 1;
+		}
+	}
+	return output;
+}
+
+
+SAT assign(SAT S, var v, bool value){
+	SAT output = copy_SAT(S);
+
+	//If SAT instance is already determined, then no need to assign
+	//Just return
+	if(output.meta.is_constant_true){
+		return output;
+	}
+	else if(output.meta.is_constant_false){
+		return output;
+	}
+
+	int open_clause_counter = 0;
+	for(int i = 0; i < output.meta.num_clauses; i++){
+		clause newclause = assign_clause(output.clauses[i], v, value);
+		//A clause evaluates to constant true
+		//Update the reference list of variables
+		if(newclause.clause_length == -1){
+			output.clauses[i] = newclause;
+
+			for(int j = 0; j < newclause.vars.size(); j++){
+				var curr_var = newclause.vars[j];
+				vector<ulong>::iterator it;
+
+				//Eliminate current clause from positive index list
+				if(curr_var > 0){
+					it = find(output.literal_indices[curr_var -1].begin(), 
+						output.literal_indices[curr_var -1].end(), i);
+					output.literal_indices[curr_var -1].erase(it);
+				}
+				//Eliminate current clause from negative index list;
+				else if (curr_var < 0){
+					it = find(output.neg_indices[abs(curr_var) -1].begin(), 
+						output.neg_indices[abs(curr_var) -1].end(), i);
+					output.neg_indices[abs(curr_var) -1].erase(it);
+				}
+			}
+			i += 1;
+		}
+
+		//We have an empty clause
+		//The SAT instance is not satisfiable!!
+		else if(newclause.clause_length == 0){
+			output.meta.is_constant_false = true;
+			break;
+		}
+
+		else{
+			output.clauses[i] = newclause;
+			open_clause_counter += 1;
+			i+=1;
+		}
+	}
+
+	//If the assigned SAT instance has no more open clause
+	//And that it is not constant false, then it is true
+	if(open_clause_counter == 0){
+		if(!output.meta.is_constant_false){
+			output.meta.is_constant_true = true;
+		}
+	}
+	return output;
+}
 
 
 bool DPLL_solve(SAT S){
-	return true;
+	if(S.meta.is_constant_true){
+		return true;
+	}
+	else if(S.meta.is_constant_false){
+		return false;
+	}
+	else{
+
+	}
 }
 
 void print_res(bool res){
