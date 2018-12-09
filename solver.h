@@ -15,8 +15,10 @@
 #include <sstream>
 #include <iomanip>
 #include <vector>
+#include <tuple>
 #include <boost/algorithm/string.hpp>
 #define MAX_NUM_CLAUSES 100000
+
 
 using namespace std;
 
@@ -75,14 +77,15 @@ bool is_unit_clause(clause C);
 bool is_empty_clause(clause C);
 
 bool is_pure(SAT S, var v);
+bool is_open(SAT S, var v);
 
 clause copy_clause(const clause l);
 
 SAT copy_SAT(const SAT S);
 
-SAT unit_propagate(clause l, SAT S);
+SAT unit_propagate(SAT S);
 
-SAT pure_literal_assign(clause l, var v);
+SAT pure_literal_assign(SAT S);
 
 var choose_literal(SAT S);
 

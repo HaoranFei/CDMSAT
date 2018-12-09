@@ -166,11 +166,11 @@ int main(int argc, char *argv[]){
 	//original.clauses[1] = assign_clause(original.clauses[1], 4, false);
 	//cout << "Length of first clause is: " << original.clauses[1].clause_length << "\n";
 
-	SAT S2 = assign(original, 4, true);
+	//SAT S2 = pure_literal_assign(original);
 
-	//bool res = DPLL_solve(original);
+	bool res = DPLL_solve(original);
 
-	//print_res(res);
+	print_res(res);
 
 	/*
 	for(int i = 0; i < original.meta.num_clauses; i++){
@@ -183,14 +183,15 @@ int main(int argc, char *argv[]){
 	return 0;
 	*/
 
-	
+	/*
 	for(int i = 0; i < S2.meta.num_vars; i++){
 		cout << "Now printing lists for variable: " << i+1 << "\n";
 		print_vector(S2.literal_indices[i]);
 		print_vector(S2.neg_indices[i]);
 		cout << "\n";
 	}
-	
+	*/
+	return 0;
 }
 
 /*
@@ -250,6 +251,23 @@ bool is_pure(SAT S, var v){
 }
 
 /*
+ * Returns whether a variable var (var > 0) is an open variable
+ * in the SAT formula S. 
+ *
+ */
+bool is_open(SAT S, var v){
+	bool positive_occurs = !S.literal_indices[v-1].empty();
+	bool negative_occurs = !S.neg_indices[v-1].empty();
+	
+	//Explanation: If both are empty, then the variable in not in the formula
+	//If one of them is empty, then the variable is pure
+	//If neither is empty, then it is not pure
+	return positive_occurs || negative_occurs;
+}
+
+
+
+/*
  * Creating a new clause that is clone of old clause
  * Deep copy
  */
@@ -300,13 +318,74 @@ SAT copy_SAT(const SAT S){
 	return output;
 }
 
+/*
+ * Perform DPLL unit propogation for every unit clause in SAT instance S
+ * 
+ *
+*/
 
+SAT unit_propagate(SAT S){
+	vector<tuple<var, bool>> to_assign;
+	SAT output = copy_SAT(S);
+	for(int i = 0; i < S.clauses.size(); i ++){
+		if(is_unit_clause(S.clauses[i])){
+			//There is only one variable!
+			var unit_var = S.clauses[i].vars[0];
+			if(unit_var > 0){
+				to_assign.push_back(make_tuple(unit_var, true));
+			}
+			else{
+				to_assign.push_back(make_tuple(abs(unit_var), false));
+			}
+		}
+	}
+	for(int j = 0; j < to_assign.size(); j ++){
+		output = assign(output, get<0>(to_assign[j]), get<1>(to_assign[j]));
+	}
+	return output;
+}
 
-SAT unit_propagate(clause l, SAT S);
+/*
+ * Requires: v is a pure variable in l
+ * Eliminates all clauses containing v by assigning them with 
+ * appropriate value
+ *
+ */
+SAT pure_literal_assign(SAT S){
+	SAT output = copy_SAT(S);
+	for(int v = 1; v < S.meta.num_vars + 1; v++){
+		//cout << "v is: " << v << "\n";
+		//cout << "is_pure(S, 3)" << is_pure(S, 3) << "\n";
+		//output = assign(output, 1, true);
+		//output = assign(output, 2, true);
+		
+		if(is_pure(S, v)){
+			//All occurances are positive
+			if(!S.literal_indices[v-1].empty()){
+				output = assign(output, v, true);
+			}
+			//All occurances are negative
+			else{
+				output = assign(output, v, false);
+			}
+		}
+	}
+	return output;
+}
 
-SAT pure_literal_assign(clause l, var v);
-
-var choose_literal(SAT S);
+/*
+ * Heuristic for choosing the splitting variable
+ * return the variable on success, return -1 on failure
+ *
+ */
+var choose_literal(SAT S){
+	for(int v = 1; v < S.meta.num_vars + 1; v++){
+		if(is_open(S, v)){
+			return v;
+		}
+	}
+	return -1;
+}
 
 /* 
  * Try to assign a variable with a truth value
@@ -329,6 +408,10 @@ clause assign_clause(clause l, var v, bool value){
 
 	if(output.clause_length == -1){
 		//Constant true clause
+		return output;
+	}
+	if(output.clause_length == 0){
+		//Constant false clause
 		return output;
 	}
 
@@ -385,29 +468,40 @@ SAT assign(SAT S, var v, bool value){
 		return output;
 	}
 
-	//cout << "output.meta.num_clauses = " << output.meta.num_clauses << "\n";
+	//cout << "\noutput.meta.num_clauses = " << output.meta.num_clauses << "\n";
 
 	int open_clause_counter = 0;
 	for(int i = 0; i < output.meta.num_clauses; i++){
+		//cout << "This is right before assigning the ith clause, i = " << i << "\n";
 		clause newclause = assign_clause(output.clauses[i], v, value);
 		//A clause evaluates to constant true
 		//Update the reference list of variables
 		if(newclause.clause_length == -1){
 			for(int j = 0; j < output.clauses[i].vars.size(); j++){
+				//cout << "j is: " << j << "\n";
+
 				var curr_var = output.clauses[i].vars[j];
 				vector<ulong>::iterator it;
+
+				//cout << "curr_var is: " << curr_var << "\n";
 
 				//Eliminate current clause from positive index list
 				if(curr_var > 0){
 					it = find(output.literal_indices[curr_var -1].begin(), 
 						output.literal_indices[curr_var -1].end(), i);
-					output.literal_indices[curr_var -1].erase(it);
+					if(it != output.literal_indices[curr_var -1].end()){
+						output.literal_indices[curr_var -1].erase(it);
+					}
 				}
 				//Eliminate current clause from negative index list;
 				else if (curr_var < 0){
 					it = find(output.neg_indices[abs(curr_var) -1].begin(), 
 						output.neg_indices[abs(curr_var) -1].end(), i);
-					output.neg_indices[abs(curr_var) -1].erase(it);
+					//cout << "get past find \n";
+					if(it != output.neg_indices[abs(curr_var) -1].end()){
+						output.neg_indices[abs(curr_var) -1].erase(it);
+					}
+					//cout << "get past erase \n";
 				}
 			}
 			output.clauses[i] = newclause;
@@ -468,6 +562,21 @@ bool DPLL_solve(SAT S){
 		return false;
 	}
 	else{
+		SAT output = copy_SAT(S);
+		output = unit_propagate(output);
+		output = pure_literal_assign(output);
+		//After the processing, check if S is solved
+		if(output.meta.is_constant_true){
+			return true;
+		}
+		else if(output.meta.is_constant_false){
+			return false;
+		}
+		else{
+			var chosen = choose_literal(output);
+			return DPLL_solve(assign(output, chosen, true)) 
+			    || DPLL_solve(assign(output, chosen, false));
+		}
 
 	}
 }
