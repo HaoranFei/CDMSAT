@@ -1,0 +1,11 @@
+c Example CNF format file 2
+c
+c By Haoran Fei
+c Answer: not satisfiable
+p cnf 4 6
+1 0 
+-1 0 
+2 3 4 0
+-2 3 0
+4 0
+-2 -1 
