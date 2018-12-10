@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -std=c++11 
 EXEC = solver.out
-OLEVEL = -O0
+OLEVEL = -O3
 
 compile: 
 	$(CC) $(CFLAGS) $(OLEVEL) -o $(EXEC) solver.cpp 
