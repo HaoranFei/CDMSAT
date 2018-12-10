@@ -38,3 +38,7 @@ and 80 clauses.
 If you test on a much larger input, expect delays. 
 There is a hard cap on number of input clauses, as macro MAX_NUM_CLAUSES. Currently 
 set to 100000. Can be adjusted. 
+
+Github:
+This project is hosted as a public repo on Github. The link is:
+https://github.com/HaoranFei/CDMSAT
