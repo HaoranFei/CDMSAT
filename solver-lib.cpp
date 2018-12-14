@@ -1,4 +1,5 @@
-#include "solver-utils.cpp"
+
+#include "heuristics.cpp"
 
 /*
  * Perform DPLL unit propogation for every unit clause in SAT instance S
@@ -55,19 +56,6 @@ SAT pure_literal_assign(SAT S){
 	return output;
 }
 
-/*
- * Heuristic for choosing the splitting variable
- * return the variable on success, return -1 on failure
- *
- */
-var choose_literal(SAT S){
-	for(int v = 1; v < S.meta.num_vars + 1; v++){
-		if(is_open(S, v)){
-			return v;
-		}
-	}
-	return -1;
-}
 
 /* 
  * Try to assign a variable with a truth value
