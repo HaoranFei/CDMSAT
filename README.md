@@ -5,7 +5,8 @@ Source code in C++, using Boost.
 # Dependency
 C++ 11 <br />
 g++ compiler <br />
-Latest version of Boost
+Latest version of Boost <br />
+The project has only been tested on Linux platforms. It might not work on other Operating Systems. Be careful. 
 
 # Usage
 To compile the executable, on a Bash terminal, run <br />
