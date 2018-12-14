@@ -23,6 +23,18 @@ To recompile, do
 $ make clean
 $ make
 
+Heuristics Selection:
+It is common knowledge that the choice of the splitting variable, often called the
+splitting rule or the splitting heuristic for DPLL algorithms, is vital to 
+improving performance in real tests. 
+In fact, some cases require exponential time
+for one splitting strategy while low-polynomial time for other strategies. 
+Therefore, the user of this module may design and implement their own splitting
+heuristics in a dedicated file, heuristics.cpp. This file should ONLY contain the
+splitting heuristics function.
+The header comment of heuristics.cpp contains more information on how to implement such
+a strategy. It also includes two examples. 
+
 Testing:
 The tests directory contains a couple of test files
 Test files are in standard DIMACS CNF-SAT format.
