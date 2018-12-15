@@ -42,6 +42,8 @@ var choose_literal(SAT S){
  * A slightly more sophisticated 
  * heuristic: returns the variable that occurs most often,
  * counting both itself and its negation. 
+ * As one might expect, this heuristic performs better 
+ * than the naive one above. 
  *
  */
 

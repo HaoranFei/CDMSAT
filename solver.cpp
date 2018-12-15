@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[]){
 	if(argc != 2){
-		cout << "Usage: ./dpll <test_file_name> \n";
+		cout << "Usage: ./solver.out ./tests/<test_file_name> \n";
 		return 0;
 	}
 	string infile_name = argv[1];
@@ -160,37 +160,12 @@ int main(int argc, char *argv[]){
 	}
 
 
-	//bool test1 = is_pure(original, 3);
-	//cout << "Variable 3 is pure, then print 1, else print 0: " << test1 << "\n"; 
-
-	//original.clauses[1] = assign_clause(original.clauses[1], 4, false);
-	//cout << "Length of first clause is: " << original.clauses[1].clause_length << "\n";
-
-	//SAT S2 = pure_literal_assign(original);
 
 	bool res = DPLL_solve(original);
 
 	print_res(res);
 
-	/*
-	for(int i = 0; i < original.meta.num_clauses; i++){
-		clause C = original.clauses[i];
-		cout << "This is clause No: " << i << "\n";
-		for(int j = 0; j < C.clause_length; j++){
-			cout << "This is the " << j << "th element: " << C.vars[j] << "\n";
-		}
-	}
-	return 0;
-	*/
 
-	/*
-	for(int i = 0; i < S2.meta.num_vars; i++){
-		cout << "Now printing lists for variable: " << i+1 << "\n";
-		print_vector(S2.literal_indices[i]);
-		print_vector(S2.neg_indices[i]);
-		cout << "\n";
-	}
-	*/
 	return 0;
 }
 
