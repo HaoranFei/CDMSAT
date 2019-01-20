@@ -34,10 +34,10 @@ a strategy. It also includes two examples. <br />
 # Testing
 The tests directory contains a couple of test files
 Test files are in standard DIMACS CNF-SAT format.<br />
-The program will not accept any other format of input file
+The program will not accept any other format of input file. <br />
 If you want to use your own test file, notice that some DIMACS files end with a 0
 delimiter after final clause. <br />
-Please delete it, or program will not run. 
+Please delete it, or program will not run. <br />
 If you want to find more test files, go to this website: <br />
 http://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html
 
